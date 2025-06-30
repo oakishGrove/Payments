@@ -1,7 +1,7 @@
 package com.payments.payment.dto;
 
-import com.payments.common.validation.NotNullOrEmpty;
-import com.payments.common.validation.PositiveBigDecimal;
+import com.payments.common.validation.annotations.NotNullOrEmpty;
+import com.payments.common.validation.annotations.PositiveBigDecimal;
 import com.payments.payment.domain.entities.Currency;
 import com.payments.payment.domain.entities.Type;
 import jakarta.validation.constraints.NotNull;

@@ -3,10 +3,11 @@ package com.payments.notifications.service;
 import com.payments.notifications.NotificationsFacade;
 import com.payments.notifications.repo.NotificationAttemptDao;
 import com.payments.notifications.repo.NotificationAttemptEntity;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,9 +20,7 @@ public class NotificationFacadeImpl implements NotificationsFacade {
 
     private static Logger logger = LoggerFactory.getLogger(NotificationFacadeImpl.class);
 
-    @Autowired
     private RestTemplate restTemplate;
-    @Autowired
     private NotificationAttemptDao notificationAttemptDao;
     private ExecutorService executorService;
 
@@ -33,6 +32,7 @@ public class NotificationFacadeImpl implements NotificationsFacade {
     private AtomicInteger counter = new AtomicInteger(0);
 
     @Override
+    @PostConstruct
     public void initService() {
         executorService = new ThreadPoolExecutor(5, 5, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
     }
@@ -86,12 +86,12 @@ public class NotificationFacadeImpl implements NotificationsFacade {
         var response = restTemplate.getForEntity(url, String.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            System.out.println("bad status");
             throw new RuntimeException("Response status is not 2xx");
         }
     }
 
     @Override
+    @PreDestroy
     public void shutdown() {
         try {
             executorService.awaitTermination(4, TimeUnit.SECONDS);

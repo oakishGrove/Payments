@@ -1,4 +1,4 @@
-package com.payments.common.validation;
+package com.payments.common.validation.annotations;
 
 import com.payments.common.validation.implementation.PositiveBigDecimalValidator;
 import jakarta.validation.Constraint;

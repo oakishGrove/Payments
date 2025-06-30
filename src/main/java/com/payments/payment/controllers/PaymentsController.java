@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.payments.payment.controllers.Constants.API_V1;
+import static com.payments.payment.controllers.Constants.PAYMENT;
 
 @RestController
 @RequestMapping(value = API_V1)
@@ -21,7 +22,7 @@ public class PaymentsController {
         this.paymentsService = paymentsService;
     }
 
-    @PostMapping("payment")
+    @PostMapping(PAYMENT)
     public ResponseEntity makePayment(@RequestBody MakePaymentDTO paymentDTO) {
 
         paymentsService.makePayment(paymentDTO);

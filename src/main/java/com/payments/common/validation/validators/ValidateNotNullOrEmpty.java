@@ -1,4 +1,4 @@
-package com.payments.common.validation.validationrules;
+package com.payments.common.validation.validators;
 
 import org.springframework.stereotype.Component;
 

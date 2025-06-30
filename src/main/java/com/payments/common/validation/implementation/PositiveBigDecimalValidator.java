@@ -1,7 +1,7 @@
 package com.payments.common.validation.implementation;
 
-import com.payments.common.validation.PositiveBigDecimal;
-import com.payments.common.validation.validationrules.ValidatePositiveBigDecimal;
+import com.payments.common.validation.annotations.PositiveBigDecimal;
+import com.payments.common.validation.validators.ValidatePositiveBigDecimal;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.stereotype.Component;
