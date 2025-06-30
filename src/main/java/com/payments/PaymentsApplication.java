@@ -1,31 +1,20 @@
 package com.payments;
 
 import com.payments.payment.aop.TestsPopulationHelper;
+import com.payments.payment.domain.entities.Type;
 import com.payments.payment.repo.dao.CurrencyDao;
-import com.payments.payment.repo.dao.TypeDao;
-import com.payments.payment.services.domain.entities.Currency;
-import com.payments.payment.services.domain.entities.Type;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 
 import java.util.List;
 
-import static com.payments.payment.services.domain.entities.Currency.EUR;
-import static com.payments.payment.services.domain.entities.Currency.USD;
+import static com.payments.payment.domain.entities.Currency.EUR;
+import static com.payments.payment.domain.entities.Currency.USD;
 
 @SpringBootApplication
 public class PaymentsApplication {
-
-//	@Autowired
-//	private TestsPopulationHelper testsPopulationHelper;
-//	@Autowired
-//	private CurrencyDao currencyDao;
 
 	public static void main(String[] args) {
 
@@ -42,13 +31,6 @@ public class PaymentsApplication {
 		});
 
 		app.run(args);
-//		var context = SpringApplication.run(PaymentsApplication.class, args);
-
-//		TestsPopulationHelper populationHelper = context.getBean(TestsPopulationHelper.class);
-
-
-//		context
-//
 	}
 
 	private static void requirementsSetup(TestsPopulationHelper populationHelper, CurrencyDao dao) {

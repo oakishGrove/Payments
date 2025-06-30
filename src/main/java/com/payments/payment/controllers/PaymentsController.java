@@ -1,6 +1,6 @@
 package com.payments.payment.controllers;
 
-import com.payments.payment.controllers.dto.MakePaymentDTO;
+import com.payments.payment.dto.MakePaymentDTO;
 import com.payments.payment.services.PaymentsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

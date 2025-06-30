@@ -1,7 +1,7 @@
 package com.payments.payment.controllers;
 
-import com.payments.payment.aop.exceptions.controllers.PaymentCreationException;
-import com.payments.payment.controllers.dto.MakePaymentDTO;
+import com.payments.common.exceptions.PaymentCreationException;
+import com.payments.payment.dto.MakePaymentDTO;
 import com.payments.payment.services.PaymentsService;
 import org.junit.jupiter.api.Test;
 

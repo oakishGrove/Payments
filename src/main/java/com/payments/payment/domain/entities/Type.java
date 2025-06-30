@@ -1,9 +1,10 @@
-package com.payments.payment.services.domain.entities;
+package com.payments.payment.domain.entities;
 
 import java.util.List;
 
-import static com.payments.payment.services.domain.entities.Currency.EUR;
-import static com.payments.payment.services.domain.entities.Currency.USD;
+import static com.payments.payment.domain.entities.Currency.EUR;
+import static com.payments.payment.domain.entities.Currency.USD;
+
 
 public enum Type {
     TYPE_1(EUR),

@@ -1,50 +1,24 @@
 package com.payments.payment.services;
 
-import com.payments.payment.aop.exceptions.controllers.PaymentCreationException;
-import com.payments.payment.controllers.dto.MakePaymentDTO;
-import com.payments.payment.repo.dao.CurrencyDao;
-import com.payments.payment.repo.dao.TypeDao;
+import com.payments.payment.dto.MakePaymentDTO;
+import com.payments.payment.repo.entities.CurrencyEntity;
 import com.payments.payment.repo.entities.PaymentEntity;
-import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Service;
+import com.payments.payment.repo.entities.TypeEntity;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 public class PaymentsRepoMapper {
 
-    private TypeDao typeDao;
-    private CurrencyDao currencyDao;
-
-    public PaymentsRepoMapper(TypeDao typeDao, CurrencyDao currencyDao) {
-        this.typeDao = typeDao;
-        this.currencyDao = currencyDao;
-    }
-
-    /**
-     * Maps dto into entity with database look up without validations.
-     *
-     * @param dto
-     * @return
-     */
-
-    @Transactional
-    public PaymentEntity transformToEntity(MakePaymentDTO dto) {
+    public PaymentEntity transformToEntity(MakePaymentDTO dto, TypeEntity type, CurrencyEntity currency) {
         var paymentEntity = new PaymentEntity();
 
         paymentEntity.setAmount(dto.getAmount());
         paymentEntity.setDebtorIban(dto.getDebtorIban());
         paymentEntity.setCreditorIban(dto.getCreditorIban());
         paymentEntity.setBic(dto.getBic());
-
-        var dbType = typeDao.findByName(dto.getType().name())
-                .orElseThrow(() -> new PaymentCreationException("This type doesn't exist"));
-        paymentEntity.setType(dbType);
-
-
-        var dbCurrency = currencyDao.findByName(dto.getCurrency().name())
-                .orElseThrow(() -> new PaymentCreationException("This currency doesn't exist"));
-        paymentEntity.setCurrency(dbCurrency);
+        paymentEntity.setType(type);
+        paymentEntity.setCurrency(currency);
 
         return paymentEntity;
     }
-
 }

@@ -1,6 +1,6 @@
-package com.payments.payment.aop;
+package com.payments.common;
 
-import com.payments.payment.aop.exceptions.controllers.PaymentCreationException;
+import com.payments.common.exceptions.PaymentCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

@@ -1,13 +1,15 @@
 package com.payments.payment.services;
 
-import com.payments.payment.aop.exceptions.controllers.PaymentCreationException;
-import com.payments.payment.controllers.dto.MakePaymentDTO;
+import com.payments.common.exceptions.PaymentCreationException;
+import com.payments.payment.domain.entities.Type;
+import com.payments.payment.dto.MakePaymentDTO;
 import com.payments.payment.repo.dao.CurrencyDao;
 import com.payments.payment.repo.dao.PaymentsDao;
 import com.payments.payment.repo.dao.TypeDao;
 import com.payments.payment.repo.entities.CurrencyEntity;
 import com.payments.payment.repo.entities.TypeEntity;
-import com.payments.payment.services.domain.entities.Type;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,8 +24,8 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.payments.payment.services.domain.entities.Currency.EUR;
-import static com.payments.payment.services.domain.entities.Currency.USD;
+import static com.payments.payment.domain.entities.Currency.EUR;
+import static com.payments.payment.domain.entities.Currency.USD;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -101,7 +103,7 @@ class PaymentServiceIntegrationTest {
 
         var ex = assertThrows(PaymentCreationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("Specified type TYPE_1 doesn't support this currency USD", ex.getMessage());
+        paymentCreationExceptionContainsReason(ex, "Specified type TYPE_1 doesn't support this currency USD");
     }
 
     private TypeEntity persistType(String name, List<CurrencyEntity> currencyList) {
@@ -124,9 +126,9 @@ class PaymentServiceIntegrationTest {
         MakePaymentDTO dto = createMakePaymentDTO();
         dto.setAmount(BigDecimal.valueOf(-.999));
 
-        var ex = assertThrows(PaymentCreationException.class,
+        var ex = assertThrows(ConstraintViolationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("Not positive amount provided", ex.getMessage());
+        constraintExceptionContainsErrorMessage(ex, "Not positive amount provided");
     }
 
     @Test
@@ -135,9 +137,9 @@ class PaymentServiceIntegrationTest {
         MakePaymentDTO dto = createMakePaymentDTO();
         dto.setCurrency(null);
 
-        var ex = assertThrows(PaymentCreationException.class,
+        var ex = assertThrows(ConstraintViolationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("Currency field required", ex.getMessage());
+        constraintExceptionContainsErrorMessage(ex, "Currency field required");
     }
 
 
@@ -147,9 +149,10 @@ class PaymentServiceIntegrationTest {
         MakePaymentDTO dto = createMakePaymentDTO();
         dto.setType(null);
 
-        var ex = assertThrows(PaymentCreationException.class,
+        var ex = assertThrows(ConstraintViolationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("Payment type field is required", ex.getMessage());
+
+        constraintExceptionContainsErrorMessage(ex, "Payment type field is required");
     }
 
     @ParameterizedTest
@@ -159,9 +162,9 @@ class PaymentServiceIntegrationTest {
         MakePaymentDTO dto = createMakePaymentDTO();
         dto.setDebtorIban(debtorIban);
 
-        var ex = assertThrows(PaymentCreationException.class,
+        var ex = assertThrows(ConstraintViolationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("Debtor IBAN field required", ex.getMessage());
+        constraintExceptionContainsErrorMessage(ex, "Debtor IBAN field required");
     }
 
     @ParameterizedTest
@@ -173,7 +176,8 @@ class PaymentServiceIntegrationTest {
 
         var ex = assertThrows(PaymentCreationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("Details field required for TYPE_1", ex.getMessage());
+
+        paymentCreationExceptionContainsReason(ex, "Details field required for TYPE_1");
     }
 
     @ParameterizedTest
@@ -186,7 +190,7 @@ class PaymentServiceIntegrationTest {
 
         var ex = assertThrows(PaymentCreationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("BIC field not supported for " + type.name(), ex.getMessage());
+        paymentCreationExceptionContainsReason(ex, "BIC field not supported for " + type.name());
     }
 
     @Test
@@ -198,7 +202,7 @@ class PaymentServiceIntegrationTest {
 
         var ex = assertThrows(PaymentCreationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("BIC field not supported for TYPE_1", ex.getMessage());
+        paymentCreationExceptionContainsReason(ex, "BIC field not supported for TYPE_1");
     }
 
 
@@ -211,16 +215,14 @@ class PaymentServiceIntegrationTest {
 
         var ex = assertThrows(PaymentCreationException.class,
                 () -> paymentsService.makePayment(dto));
-        assertEquals("BIC field required for TYPE_3", ex.getMessage());
+        paymentCreationExceptionContainsReason(ex, "BIC field required for TYPE_3");
     }
-
-    // details test for type3
 
     static List<String> emptyStringStream() {
         return Arrays.asList("", null, " ", "\n");
     }
 
-    private static MakePaymentDTO createMakePaymentDTO() {
+    private MakePaymentDTO createMakePaymentDTO() {
         MakePaymentDTO dto = new MakePaymentDTO();
         dto.setAmount(BigDecimal.valueOf(0.0001));
         dto.setCurrency(EUR);
@@ -230,5 +232,19 @@ class PaymentServiceIntegrationTest {
         dto.setDetails("Detail1");
 
         return dto;
+    }
+
+    private void constraintExceptionContainsErrorMessage(ConstraintViolationException ex, String errorMessage) {
+        assertTrue(ex.getConstraintViolations()
+                .stream()
+                .map(ConstraintViolation::getMessage)
+                .anyMatch(msg -> msg.equals(errorMessage)));
+    }
+
+    private void paymentCreationExceptionContainsReason(PaymentCreationException ex, String expectedReason) {
+
+        assertTrue(ex.getReasons().stream()
+                .anyMatch(eR -> eR.equals(expectedReason)), "expected reason: " + expectedReason
+                + " in " + ex.getReasons());
     }
 }

@@ -1,159 +1,74 @@
 package com.payments.payment.services;
 
-import com.payments.notifications.NotificationsFacade;
-import com.payments.payment.aop.exceptions.controllers.PaymentCreationException;
-import com.payments.payment.controllers.dto.MakePaymentDTO;
-import com.payments.payment.repo.dao.PaymentsDao;
-import com.payments.payment.repo.entities.CurrencyEntity;
+import com.payments.common.validation.ValidationEngine;
+import com.payments.common.exceptions.PaymentCreationException;
+import com.payments.payment.dto.MakePaymentDTO;
+import com.payments.payment.repo.CurrencyEntityRepo;
+import com.payments.payment.repo.TypeEntityRepo;
 import com.payments.payment.repo.entities.PaymentEntity;
-import com.payments.payment.repo.entities.TypeEntity;
-import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.time.Instant;
-import java.util.Random;
-
-
-import static com.payments.payment.aop.StringUtils.nullOrEmpty;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 @Service
+@Validated
 public class PaymentsService {
 
-    private PaymentsRepoMapper paymentsRepoMapper;
-    private PaymentsDao paymentsDao;
-    private NotificationsFacade notificationsFacade;
+    private final PaymentsRepoMapper paymentsRepoMapper;
+    private final CurrencyEntityRepo currencyEntityRepo;
+    private final TypeEntityRepo typeEntityRepo;
+    private final PaymentsEntityService paymentsEntityService;
 
-    private static Random random = new Random(Instant.now().getEpochSecond());
+    private final ValidationEngine<MakePaymentDTO> makePaymentPreDBValidator;
+    private final ValidationEngine<PaymentEntity> makePaymentPostDBValidator;
 
-    public PaymentsService(PaymentsRepoMapper paymentsRepoMapper, PaymentsDao paymentsDao, NotificationsFacade notificationsFacade) {
+    private final NotificationsService notificationsService;
+
+    public PaymentsService(PaymentsRepoMapper paymentsRepoMapper
+            , CurrencyEntityRepo currencyEntityRepo
+            , TypeEntityRepo typeEntityRepo
+            , PaymentsEntityService paymentsEntityService
+            , ValidationEngine<MakePaymentDTO> makePaymentPreDBValidator
+            , ValidationEngine<PaymentEntity> makePaymentPostDBValidator
+            , NotificationsService notificationsService
+    ) {
         this.paymentsRepoMapper = paymentsRepoMapper;
-        this.paymentsDao = paymentsDao;
-        this.notificationsFacade = notificationsFacade;
+        this.currencyEntityRepo = currencyEntityRepo;
+        this.typeEntityRepo = typeEntityRepo;
+        this.paymentsEntityService = paymentsEntityService;
+        this.makePaymentPreDBValidator = makePaymentPreDBValidator;
+        this.makePaymentPostDBValidator = makePaymentPostDBValidator;
+        this.notificationsService = notificationsService;
     }
 
     @Transactional
-    public void makePayment(MakePaymentDTO paymentDTO) {
+    public void makePayment(@Valid MakePaymentDTO paymentDTO) {
 
-        commonValidationOfPayment(paymentDTO);
+        makePaymentPreDBValidator
+                .validate(paymentDTO)
+                .ifPresent(errors -> {
+                    throw new PaymentCreationException(errors);
+                });
 
-        var payment = paymentsRepoMapper.transformToEntity(paymentDTO);
+        // todo: seal from there
+        var currency = currencyEntityRepo.getCurrencyByName(paymentDTO.getCurrency().name(),
+                () -> new PaymentCreationException("This currency doesn't exist"));
 
-        postTransformationValidations(payment);
+        var type = typeEntityRepo.getTypeByName(paymentDTO.getType().name(),
+                () -> new PaymentCreationException("This type doesn't exist"));
 
-        payment.setCreated(new Date(Instant.now().toEpochMilli()));
-        paymentsDao.save(payment);
+        var payment = paymentsRepoMapper.transformToEntity(paymentDTO, type, currency);
 
-        sendNotification(paymentDTO);
-    }
+        makePaymentPostDBValidator
+                .validate(payment)
+                .ifPresent(errors -> {
+                    throw new PaymentCreationException(errors);
+                });
 
-    private void sendNotification(MakePaymentDTO payment) {
+        paymentsEntityService.savePayment(payment);
+        // till here
 
-        switch (payment.getType()) {
-            case TYPE_1 -> {
-
-                var url = getUrl();
-                notificationsFacade.sendNotification(url, payment.getType().name());
-            }
-            case TYPE_2 -> {
-
-//                var url = getUrl();
-                var url = "http://reddit.com:80";
-                notificationsFacade.sendNotification(url, payment.getType().name());
-            }
-            default -> {}
-        }
-    }
-
-    private String getUrl() {
-
-//        return "https://httpstat.us/" + (random.nextBoolean() ? 200 : 507);
-//        return "http://httpforever.com:80";
-        return "http://google.com:80";
-//        return "http://httpstat.us/201";
-    }
-
-    private void commonValidationOfPayment(MakePaymentDTO paymentDTO) {
-
-        if (paymentDTO == null) {
-
-            throw new PaymentCreationException("Empty body");
-        }
-
-        if (paymentDTO.getAmount() == null || paymentDTO.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new PaymentCreationException("Not positive amount provided");
-        }
-        if (paymentDTO.getCurrency() == null) {
-            throw new PaymentCreationException("Currency field required");
-        }
-        if (paymentDTO.getType() == null) {
-            throw new PaymentCreationException("Payment type field is required");
-        }
-        if (nullOrEmpty(paymentDTO.getCreditorIban())) {
-            throw new PaymentCreationException("Creditor IBAN field required");
-        }
-
-        validIbanFormat(paymentDTO.getCreditorIban());
-
-        if (nullOrEmpty(paymentDTO.getDebtorIban())) {
-            throw new PaymentCreationException("Debtor IBAN field required");
-        }
-        validIbanFormat(paymentDTO.getCreditorIban());
-
-        switch (paymentDTO.getType()) {
-            case TYPE_1:
-
-                if (nullOrEmpty(paymentDTO.getDetails())) {
-                    throw new PaymentCreationException("Details field required for TYPE_1");
-                }
-                if (paymentDTO.getBic() != null) {
-                    throw new PaymentCreationException("BIC field not supported for TYPE_1");
-                }
-                break;
-            case TYPE_2:
-
-                if (paymentDTO.getBic() != null) {
-                    throw new PaymentCreationException("BIC field not supported for TYPE_2");
-                }
-                break;
-            case TYPE_3:
-
-                if (nullOrEmpty(paymentDTO.getBic())) {
-                    throw new PaymentCreationException("BIC field required for TYPE_3");
-                }
-
-                validBicCode(paymentDTO.getBic());
-
-                if (paymentDTO.getDetails() != null) {
-                    throw new PaymentCreationException("Details field not supported for TYPE_3");
-                }
-                break;
-        }
-    }
-
-    private void postTransformationValidations(PaymentEntity payment) {
-
-        if (!isCurrencyValidWithType(payment.getCurrency(), payment.getType())) {
-            throw new PaymentCreationException("Specified type %s doesn't support this currency %s"
-                    .formatted(payment.getType().getName(), payment.getCurrency().getName()));
-        }
-    }
-
-    private boolean isCurrencyValidWithType(CurrencyEntity expectedCurrency, TypeEntity type) {
-
-        if (expectedCurrency == null || type == null) {
-            return false;
-        }
-
-        return type.getCurrencyList().stream()
-                .map(CurrencyEntity::getName)
-                .anyMatch(currencyName -> currencyName.equals(expectedCurrency.getName()));
-    }
-
-    private void validIbanFormat(String creditorIban) {
-    }
-
-    private void validBicCode(String bic) {
+        notificationsService.sendNotification(paymentDTO);
     }
 }

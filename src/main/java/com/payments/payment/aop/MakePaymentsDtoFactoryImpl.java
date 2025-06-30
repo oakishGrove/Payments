@@ -1,8 +1,8 @@
 package com.payments.payment.aop;
 
-import com.payments.payment.controllers.dto.MakePaymentDTO;
-import com.payments.payment.services.domain.entities.Currency;
-import com.payments.payment.services.domain.entities.Type;
+import com.payments.payment.domain.entities.Currency;
+import com.payments.payment.domain.entities.Type;
+import com.payments.payment.dto.MakePaymentDTO;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

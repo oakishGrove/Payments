@@ -1,12 +1,12 @@
 package com.payments.payment.aop;
 
-import com.payments.payment.controllers.dto.MakePaymentDTO;
+import com.payments.payment.domain.entities.Currency;
+import com.payments.payment.domain.entities.Type;
+import com.payments.payment.dto.MakePaymentDTO;
 import com.payments.payment.repo.dao.CurrencyDao;
 import com.payments.payment.repo.dao.TypeDao;
 import com.payments.payment.repo.entities.CurrencyEntity;
 import com.payments.payment.repo.entities.TypeEntity;
-import com.payments.payment.services.domain.entities.Currency;
-import com.payments.payment.services.domain.entities.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
