@@ -1,7 +1,7 @@
 package com.payments.common.validation.implementation;
 
-import com.payments.common.validation.NotNullOrEmpty;
-import com.payments.common.validation.validationrules.ValidateNotNullOrEmpty;
+import com.payments.common.validation.annotations.NotNullOrEmpty;
+import com.payments.common.validation.validators.ValidateNotNullOrEmpty;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.stereotype.Component;

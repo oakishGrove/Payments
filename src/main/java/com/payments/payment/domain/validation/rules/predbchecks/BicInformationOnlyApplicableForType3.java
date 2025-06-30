@@ -1,7 +1,7 @@
 package com.payments.payment.domain.validation.rules.predbchecks;
 
 import com.payments.payment.domain.validation.MakePaymentPreDb;
-import com.payments.common.validation.validationrules.ValidateBic;
+import com.payments.common.validation.validators.ValidateBic;
 import com.payments.payment.dto.MakePaymentDTO;
 import org.springframework.stereotype.Component;
 
