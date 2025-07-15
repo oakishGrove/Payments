@@ -28,14 +28,20 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	compileOnly("org.projectlombok:lombok:1.18.38")
-	annotationProcessor("org.projectlombok:lombok:1.18.38")
-	testCompileOnly("org.projectlombok:lombok:1.18.38")
-	testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
+//	implementation 'org.springframework.retry:spring-retry'
+
+	implementation 'io.github.resilience4j:resilience4j-retry:2.1.0'
+	implementation 'io.vavr:vavr:0.10.4'
 
 	testImplementation 'org.testcontainers:postgresql'
+	implementation 'jakarta.validation:jakarta.validation-api:3.1.1'
+	implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+//build.dependsOn(':projectpath:population')
+
+//task.named("population")
